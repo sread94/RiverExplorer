@@ -1,15 +1,229 @@
-data = {
-	"numNodes" : 3,
-	"vals" : [3, 1, 1],
-	"coords" : [	
-				[0,3],
-				[2,2],
-				[2,4]
+//VALID TREES
+
+var tree_valid1 = {
+	numNodes : 4,
+	nodeIds : [0, 1, 2, 3],
+	vals : [3, 5, 1, 2],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[5,5]
 			 ],
-	"probBtwNodes" : [
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25],
+					[2, 3, 1],
+					[3, 2, .5],
+					]
+};
+
+var tree_valid2 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3]
+			 ],
+	probBtwNodes : [
 					[0, 1, 1],
 					[1, 0, .5],
 					[0, 2, .5],
 					[2, 0, .25]
 					]
-}
+};
+
+var tree_valid3 = {
+	numNodes : 5,
+	nodeIds : [0, 1, 2, 3, 4],
+	vals : [3, 2, 1, 2, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[5,5],
+				[3,5]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25],
+					[2, 3, 1],
+					[3, 2, .5],
+					[2, 4, 1],
+					[4, 2, .2]
+					]
+};
+
+var tree_valid4 = {
+	numNodes : 4,
+	nodeIds : [0, 1, 3, 2],
+	vals : [3, 1, 1, 2],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[5,5]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 3, .5],
+					[3, 0, .25],
+					[3, 2, 1],
+					[2, 3, .5],
+					]
+};
+
+/**********INVALID TREES***************/
+
+//One edge is not bidirected
+var tree_invalid1 = {
+	numNodes : 4,
+	nodeIds : [0, 1, 2, 3],
+	vals : [3, 1, 1, 2],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[5,5]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25],
+					[2, 3, 1],
+					]
+};
+
+//There is a cycle
+var tree_invalid2 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[5,5]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25],
+					[1, 2, 1],
+					[2, 1, 1]
+					]
+};
+
+//One of the nodes had no neighbors
+var tree_invalid3 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+			 ],
+	probBtwNodes : [
+					[0, 2, .5],
+					[2, 0, .25],
+					]
+};
+
+//all nodes must have coordinates listed
+var tree_invalid4 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25]
+					]
+};
+
+//one of the probabilities is greater than 1
+var tree_invalid5 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1.2],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .5]
+					]
+};
+
+//one of the probabilities is less than 0
+var tree_invalid6 = {
+	numNodes : 3,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, -.3]
+					]
+};
+
+//numNodes does not match the length of nodeIds (too high)
+var tree_invalid7 = {
+	numNodes : 4,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25]
+					]
+};
+
+//numNodes does not match the length of nodeIds (too low)
+var tree_invalid8 = {
+	numNodes : 2,
+	nodeIds : [0, 1, 2],
+	vals : [3, 1, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3]
+			 ],
+	probBtwNodes : [
+					[0, 1, 1],
+					[1, 0, .5],
+					[0, 2, .5],
+					[2, 0, .25]
+					]
+};

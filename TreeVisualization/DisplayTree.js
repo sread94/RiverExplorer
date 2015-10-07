@@ -1,33 +1,15 @@
-var data = {
-	numNodes : 4,
-	nodeIds : [0, 1, 2, 3],
-	vals : [3, 1, 1, 2],
-	coords : [	
-				[3,1],
-				[2,3],
-				[4,3],
-				[5,5]
-			 ],
-	probBtwNodes : [
-					[0, 1, 1],
-					[1, 0, .5],
-					[0, 2, .5],
-					[2, 0, .25],
-					[2, 3, 1],
-					[3, 2, .5]
-					]
-};
-
 /**
 	This function reads in JSON data
 	and creates a tree
 */
 function readTree(){
 
+	var data = tree_valid3;
+
 	//create and array for all of the nodes in the tree
 	var nodeList = [];
 	var tempNode;
-	for(var i = 0; i<data.numNodes; i++){
+	for(var i = 0; i<data.nodeIds.length; i++){
 		tempNode = new Node(data.nodeIds[i], data.vals[i],
 			data.coords[i], getNeighbors(data.probBtwNodes, data.nodeIds[i]));
 		nodeList[i] = tempNode;
@@ -38,17 +20,21 @@ function readTree(){
 		data.probBtwNodes);
 
 	//make sure the tree is valid
-	if(checkTree(theTree)){
+	var validTree = checkTree(theTree);
+
+	if(validTree === "true"){
 
 		//if the tree is valid draw it
 		drawTree(theTree);
+		computeNetworkValue(theTree, theTree.nodeList[0], theTree.nodeList[1]);
 	}
 	else{
 
 		//if the tree is not valid show an alert message
-		window.alert("the tree you provided was not valid");
+		window.alert(validTree);
 	}
 }
+
 /**
 	finds all the neightbors of a given node
 	based on the data for the probability for
@@ -77,7 +63,7 @@ function checkTree(tree){
 
 	//if odd number of probabilities the tree is not bidirected
 	if(tree.edgeProbs.length%2 ===1){
-		return false;
+		return "The edges must be bidirected";
 	}
 
 	//if any pair of nodes a b has a probability
@@ -105,7 +91,34 @@ function checkTree(tree){
 
 		//if the pair does not exist the tree is not valid
 		if(!pairExists){
-			return false;
+			return "The edges must be bidirected";
+		}
+	}
+
+	//make sure numNodes is correct
+	if(tree.numNodes != tree.nodeList.length){
+		return "numNodes must match the number of nodes in the nodeIds array";
+	}
+
+	//make sure every node has at least 1 neighbor
+	for(var n = 0; n<tree.numNodes; n++){
+		if(tree.nodeList[n].neighbors.length===0){
+			return "Every node must have at least 1 neighbor";
+		}
+	}
+
+	//make sure all probabilities are between 0 and 1
+	for(var m = 0; m<tree.edgeProbs.length; m++){
+		if(tree.edgeProbs[m][2]>1 || tree.edgeProbs[m][2]<0){
+				return "The edge probabilities must be between 0 and 1";
+		}
+	}
+
+	//make sure all nodes have coordinates
+	for(var f = 0; f < tree.nodeList.length; f++){
+		if(tree.nodeList[f].coordinates === null ||
+			tree.nodeList[f].coordinates === undefined){
+			return "All nodes must have coordinates listed";
 		}
 	}
 
@@ -142,7 +155,7 @@ function checkTree(tree){
 			//the tree is not valid
 			if(curNeighbor !== curNodeParent){
 				if(curNeighbor in visitedNodes){
-					return false;
+					return "There cannot be any cycles in the tree";
 				}
 
 				//if the node has not been visited add the neighbor
@@ -156,7 +169,7 @@ function checkTree(tree){
 
 	//if no cycles or 1 way edges are found
 	//the tree is valid
-	return true;
+	return "true";
 }
 
 /**
@@ -193,18 +206,20 @@ function drawTree(tree){
 		var distX = startNode.coordinates[0]*75 + shift - endNode.coordinates[0]*75;
 		var distY = startNode.coordinates[1]*75 - endNode.coordinates[1]*75;
 
+		var shift2 = startNode.coordinates[0] > endNode.coordinates[0] ? 12 : -12;
+
 		//write the probability next to the edge
 		ctx.fillStyle = "#000000";
 		ctx.font = "20px Georgia";
 		ctx.fillText("" + tree.edgeProbs[j][2], 
-			startNode.coordinates[0]*75 - distX/2 + shift*2, 
-			startNode.coordinates[1]*75 - distY/2+ shift*2);
+			startNode.coordinates[0]*75 - distX/2 + shift*2 + shift2, 
+			startNode.coordinates[1]*75 - distY/2 + shift*2);
 	}
 
 	//draw the nodes on the screen
 	for(var i = 0; i < tree.numNodes; i++){
 
-		ctx.fillStyle = "#00A308";
+		ctx.fillStyle = "#7FFF00";
 
 		//draw a circle for the node based on the coordinates given
 		ctx.beginPath();
@@ -223,13 +238,125 @@ function drawTree(tree){
 }
 
 /**
+	This function computes the value of the river network 
+*/
+function computeNetworkValue(tree, nodeA, nodeB){
+
+	//alpha
+	var alphaAB = computeAlphaVal(tree, nodeA, nodeB);
+	var alphaBA = computeAlphaVal(tree, nodeB, nodeA);
+
+	//beta
+	var betaAB = computeBetaVal(tree, nodeA, nodeB);
+	var betaBA = computeBetaVal(tree, nodeB, nodeA);
+
+	//gamma
+
+
+	//Display values on the screen
+
+	//get the canvas
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+
+	ctx.fillStyle = "#000000";
+	ctx.font = "20px Georgia";
+	ctx.fillText("Node A is: " + nodeA.nodeId, 200, 500);
+	ctx.fillText("Node B is: " + nodeB.nodeId, 200, 520);
+	ctx.fillText("AlphaAB is: " + alphaAB, 200, 540);
+	ctx.fillText("AlphaBA is: " + alphaBA, 200, 560);
+	ctx.fillText("BetaAB is: " + betaAB, 200, 580);
+	ctx.fillText("BetaBA is: " + betaBA, 200, 600);
+
+}
+
+/**
+	Compute the alpha value for the network
+*/
+function computeAlphaVal(tree, node, parent){
+	
+	//if the node is a leaf node return the node val
+	if(node.neighbors.length === 1 && 
+		node.neighbors[0] === parent.nodeId){
+		return node.val;
+	}
+
+	else{
+
+		//alphaVal will be the value of the current node
+		//plus the alpha values of all children * the probability
+		//that a fish could swim from the child node to the current node
+		alphaVal = node.val;
+		for(var i = 0; i < node.neighbors.length; i++){
+			if(node.neighbors[i] !== parent.nodeId){
+
+				alphaVal += computeAlphaVal(tree, tree.getNodeById(node.neighbors[i]), 
+					node)* tree.getDirectedProbabilityByIds (node.neighbors[i], 
+						node.nodeId);
+			}
+		}
+		return alphaVal;
+	}
+}
+
+/**
+	Compute the beta value for the network
+*/
+function computeBetaVal(tree, node, parent){
+
+	//if the node is a leaf node return the node val
+	if(node.neighbors.length === 1 && 
+		node.neighbors[0] === parent.nodeId){
+		return node.val;
+	}
+
+	else{
+
+		//betaVal will be the value of the current node
+		//plus the beta values of all children * the probability
+		//that a fish could swim from the current node to the childe node
+		betaVal = node.val;
+		for(var i = 0; i < node.neighbors.length; i++){
+			if(node.neighbors[i] !== parent.nodeId){
+
+				betaVal += computeBetaVal(tree, tree.getNodeById(node.neighbors[i]), 
+					node)* tree.getDirectedProbabilityByIds (node.nodeId, 
+						node.neighbors[i]);
+			}
+		}
+		return betaVal;
+	}
+}
+
+/**
+	Compute the gamma value for the network
+*/
+function computeGammaVal(tree, node, parent){
+
+}
+
+/**
 	Tree class
+
+	Each tree has a number of nodes, a list of nodes (of type node),
+	and a 2-D array of the probability of a fish swimming from
+	one node to another (probability of passing a barrier)
 */
 function Tree(numNodes, nodeList, edgeProbs){
 
 	//properties
+
+	//number of nodes in the tree
 	this.numNodes = numNodes;
+
+	//list of nodes in the tree (of type Node)
 	this.nodeList = nodeList;
+
+	//2-D array of the different edge probabilities
+	//edgeProbs[i] = [startNode, endNode, probability]
+	//where i is some index, start node is the node where
+	//the directed edge start, end node is the node where
+	//the directed edge ends, and probability is between 0 and 1
 	this.edgeProbs = edgeProbs;
 
 	/**
@@ -244,16 +371,39 @@ function Tree(numNodes, nodeList, edgeProbs){
 		}
 		return null;
 	}
+
+	/**
+		get the proability can go from idStart to idEnd
+	*/
+	this.getDirectedProbabilityByIds = function (idStart, idEnd){
+		for(var i = 0; i < this.edgeProbs.length; i++){
+			if(this.edgeProbs[i][0] === idStart &&
+				this.edgeProbs[i][1] === idEnd){
+				return this.edgeProbs[i][2];
+			}
+		}
+	}
 }
 
 /**
 	Node class
+
+	A node has an id, a value, coordinates for the location
+	on the screen, and a list of neighbor ids
 */
 function Node(theId, val, coords, neighbors){
 
 	//properties
+
+	//id of the node
 	this.nodeId = theId;
+
+	//the value of the node
 	this.val = val;
+
+	//coordinates of the node (where it will be on the screen)
 	this.coordinates = coords;
+
+	//list of node ids that are the node's neighbors
 	this.neighbors = neighbors;
 }
