@@ -27,12 +27,33 @@ function readTree(){
 		//if the tree is valid draw it
 		drawTree(theTree);
 		computeNetworkValue(theTree, theTree.nodeList[0], theTree.nodeList[1]);
+		addMouseEvents(theTree);
 	}
 	else{
 
 		//if the tree is not valid show an alert message
 		window.alert(validTree);
 	}
+}
+
+/**
+	add mouse events
+*/
+function addMouseEvents(tree){
+
+
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+
+	//when the user clicks the canvas check if they clicked on an edge
+	var mouseDownListener = function(event){ 
+        var mouseDownX = event.pageX;
+        var mouseDownY = event.pageY; 
+        checkIfOnEdge(tree, mouseDownX, mouseDownY);
+    };
+
+    c.addEventListener("mousedown",mouseDownListener,false);
+
 }
 
 /**
@@ -195,7 +216,6 @@ function drawTree(tree){
 		//both directed edges are seen
 		var shift = startNodeId > endNodeId ? 10 : -10;
 
-
 		//draw a path from the starting node to the ending node
 		ctx.beginPath();
 		ctx.moveTo(startNode.coordinates[0]*75 + shift, startNode.coordinates[1]*75);
@@ -203,7 +223,7 @@ function drawTree(tree){
 		ctx.stroke();
 
 		//find the distance between the nodes in the x and y directions
-		var distX = startNode.coordinates[0]*75 + shift - endNode.coordinates[0]*75;
+		var distX = startNode.coordinates[0]*75 - endNode.coordinates[0]*75;
 		var distY = startNode.coordinates[1]*75 - endNode.coordinates[1]*75;
 
 		var shift2 = startNode.coordinates[0] > endNode.coordinates[0] ? 12 : -12;
@@ -233,6 +253,52 @@ function drawTree(tree){
 		ctx.fillText("" + tree.nodeList[i].val, 
 			75*tree.nodeList[i].coordinates[0]-5, 
 			75*tree.nodeList[i].coordinates[1]);
+	}
+
+}
+
+/**
+	when user clicks on the screen test if they clicked
+	on an edge. If so, show the probablility of moving from
+	one node to the other.
+*/
+function checkIfOnEdge(tree, xPos, yPos){
+
+	for(var i = 0; i < tree.edgeProbs.length; i++){
+
+		//get the nodes for the current node pair
+		var node1 = tree.edgeProbs[i][0];
+		var node2 = tree.edgeProbs[i][1];
+
+		//find the coordinates
+		var coord1 = tree.getNodeById(node1).coordinates;
+		var coord2 = tree.getNodeById(node2).coordinates;
+
+		//figure out how the line was shifted
+		var shift = node1 > node2 ? 10 : -10;
+		if(coord1[0] > coord2){
+			shift += 20;
+		}
+
+		//find the distance between nodes
+		var distBetweenNodes = Math.sqrt( 
+			Math.pow(coord1[0]*75 - coord2[0]*75,2) 
+			+ Math.pow(coord1[1]*75 - coord2[1]*75,2));
+
+		//find the distance between 1 node and the clicked point
+		//plus the distance from the clicked point and the second node
+		var dist1ToClickTo2 = Math.sqrt(Math.pow(coord1[0]*75 + shift - xPos,2) 
+			+ Math.pow(coord1[1]*75 - yPos,2)) 
+			+ Math.sqrt(Math.pow(xPos - coord2[0]*75 - shift,2)
+			+ Math.pow(yPos - coord2[1]*75,2));
+
+		//if the user is close to the line show the probability that
+		//that line represents
+		var difference = dist1ToClickTo2 - distBetweenNodes;
+		if(difference < 1 && difference > 0){
+			window.alert("The probability of moving from " + node1 + 
+				" to " + node2 + " is " + tree.edgeProbs[i][2]);
+		}
 	}
 
 }
