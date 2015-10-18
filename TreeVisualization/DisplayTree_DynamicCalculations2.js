@@ -3,9 +3,13 @@ var alphaToParent = [];
 var alphaFromParent = [];
 var alphaFromRoot = [];
 
-var alphaArray = [];
-var betaArray = [];
-var gammaArray = [];
+var betaToParent = [];
+var betaFromParent = [];
+var betaFromRoot = [];
+
+var gammaToParent = [];
+var gammaFromParent = [];
+var gammaFromRoot = [];
 
 /**
 	This function reads in JSON data
@@ -335,55 +339,6 @@ function checkIfOnEdge(tree, xPos, yPos){
 }
 
 /**
-	This function computes the value of the river network 
-*/
-function computeNetworkValue_GivenEdge(tree, nodeA, nodeB){
-
-	//set array lengths for the dynamic solution
-	alphaArray.length = tree.numNodes;
-	betaArray.length = tree.numNodes;
-	gammaArray.length = tree.numNodes;
-
-	//get alpha values from dynamic solution
-	computeAlphaValDynamic(tree, nodeA, nodeB);
-	computeAlphaValDynamic(tree, nodeB, nodeA);
-
-	var alphaBA = alphaArray[nodeB.nodeId];
-	var alphaAB = alphaArray[nodeA.nodeId];
-
-
-	//get beta values from dynamic solution
-	computeBetaValDynamic(tree, nodeA, nodeB);
-	computeBetaValDynamic(tree, nodeB, nodeA);
-	var betaBA = betaArray[nodeB.nodeId];
-	var betaAB = betaArray[nodeA.nodeId];
-
-
-	//get gamma value from dynamic solution
-	computeGammaValDynamic(tree, nodeA, nodeB);
-	computeGammaValDynamic(tree, nodeB, nodeA);
-	var gammaAB = gammaArray[nodeA.nodeId];
-	var gammaBA = gammaArray[nodeB.nodeId];
-
-	//get the canvas
-	var c=document.getElementById("myCanvas");
-	var ctx=c.getContext("2d");
-
-	//Display values on the screen
-	ctx.fillStyle = "#000000";
-	ctx.font = "20px Georgia";
-	ctx.fillText("Node A is: " + nodeA.nodeId, 200, 500);
-	ctx.fillText("Node B is: " + nodeB.nodeId, 200, 520);
-	ctx.fillText("AlphaAB is: " + alphaAB, 200, 540);
-	ctx.fillText("AlphaBA is: " + alphaBA, 200, 560);
-	ctx.fillText("BetaAB is: " + betaAB, 200, 580);
-	ctx.fillText("BetaBA is: " + betaBA, 200, 600);
-	ctx.fillText("GammaAB: " + gammaAB, 200, 620);
-	ctx.fillText("GammaBA: " + gammaBA, 200, 640);
-}
-
-
-/**
 	calculate the value of the river network
 	based on the root
 */
@@ -391,6 +346,7 @@ function computeNetworkValueGeneral(tree){
 
 	computeNetworkValueGeneral_AlphaValues(tree);
 	computeNetworkValueGeneral_BetaValues(tree);
+	computeNetworkValueGeneral_GammaValues(tree);
 
 }
 
@@ -431,8 +387,7 @@ function computeNetworkValueGeneral_AlphaValues(tree){
 	ctx.font = "20px Georgia";
 	ctx.fillText("alphaToParent: " + alphaToParent, 150, 500);
 	ctx.fillText("alphaFromRoot: " + alphaFromRoot, 150, 520);
-	ctx.fillText("alphaFromParent: " + alphaFromParent, 15
-		0, 540);
+	ctx.fillText("alphaFromParent: " + alphaFromParent, 150, 540);
 }
 
 /**
@@ -507,7 +462,6 @@ function computeAlphaFromParent(tree, node, parent){
 	//then use the alphaFromRoot to that child
 	if(parent.nodeId === tree.root.nodeId){
 
-		//
 		alphaFromParent[node.nodeId] = alphaFromRoot[node.rootId]
 			*tree.getDirectedProbabilityByIds(parent.nodeId, node.nodeId)
 			+ node.val;
@@ -554,18 +508,198 @@ function computeAlphaFromParent(tree, node, parent){
 */
 function computeNetworkValueGeneral_BetaValues(tree){
 
+	//declare the length of each of the beta arrays
+	betaToParent.length = tree.numNodes -1;
+	betaFromRoot.length = tree.root.neighbors.length;
+	betaFromParent.length = tree.numNodes - 1;
+
+
+	//find all beta values going from the leaf nodes up to the root
+	for(var i = 0; i < tree.root.neighbors.length; i++){
+		computeBetaToParent(tree, tree.getNodeByLabel(tree.root.neighbors[i]),
+			tree.root);
+	}
+
+	//find the beta values the root sends to each child
+	for(var j = 0; j < tree.root.neighbors.length; j++){
+		computeBetaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
+	}
+
+	//find the beta values parents send to the children
+	for(var k = 0; k < tree.root.neighbors.length; k++){
+		computeBetaFromParent(tree, tree.getNodeByLabel(tree.root.neighbors[k]),
+			tree.root);
+	}
+
+	//get the canvas
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+
+	//Display values on the screen
+	ctx.fillStyle = "#000000";
+	ctx.font = "20px Georgia";
+	ctx.fillText("betaToParent: " + betaToParent, 150, 560);
+	ctx.fillText("betaFromRoot: " + betaFromRoot, 150, 580);
+	ctx.fillText("betaFromParent: " + betaFromParent, 150, 600);
+
+}
+
+/**
+	Calculate the beta values from child to parent of the network 
+	of the subtree, with the root of the subtree at the node
+*/
+function computeBetaToParent(tree, node, parent){
+
+	//if the node is a leaf node return the node val
+	if(node.neighbors.length === 1 && 
+		tree.getNodeIdByLabel(node.neighbors[0]) === parent.nodeId){
+		betaToParent[node.nodeId] = node.val;
+	}
+	else{
+
+		//beta value is the nodeValue
+		//plus probability to traverse down tree
+		//to each child times the beta value
+		//of the child
+		betaToParent[node.nodeId] = node.val;
+		for(var i = 0; i < node.neighbors.length; i++){
+			if(tree.getNodeIdByLabel(node.neighbors[i]) !== parent.nodeId){
+
+				//recursively call the algorithm to calculate the beta value
+				//of the children
+				computeBetaToParent(tree, tree.getNodeByLabel(node.neighbors[i]), 
+					node);
+
+				//get the child's beta value
+				betaToParent[node.nodeId] += 
+					betaToParent[tree.getNodeIdByLabel(node.neighbors[i])]*
+					tree.getDirectedProbabilityByIds(node.nodeId, 
+						tree.getNodeIdByLabel(node.neighbors[i]));
+			}
+		}
+	}
+}
+
+/**
+	compute the beta value from the root to each child
+*/
+function computeBetaFromRoot(tree, node){
+
+	//the value from the root to each of it's children
+	//plus the beta value of every other child up to the root
+	//times the probablilty from root to child
+	betaFromRoot[node.rootId] = tree.root.val;
+	for(var i = 0; i < tree.root.neighbors.length; i++){
+		var curChild = tree.root.neighbors[i];
+
+		//if the current child is not the node we are getting the
+		//beta value to then add the beta from that child
+		//to the root
+		if(curChild != node.nodeLabel){
+			var curChildIndex = tree.getNodeIdByLabel(curChild);
+			betaFromRoot[node.rootId] += betaToParent[curChildIndex]
+				*tree.getDirectedProbabilityByIds(
+					root.nodeId,curChildIndex);
+		}
+	}
+}
+
+/**
+	find the beta values from the parents to the children
+*/
+function computeBetaFromParent(tree, node, parent){
+	
+	//if the parent of the node is the root
+	//then use the betaFromRoot to that child
+	if(parent.nodeId === tree.root.nodeId){
+
+		betaFromParent[node.nodeId] = betaFromRoot[node.rootId]
+			*tree.getDirectedProbabilityByIds(node.nodeId, parent.nodeId)
+			+ node.val;
+
+		//recursively call the function for all children
+		//of the node, but not the root
+		for(var i = 0; i < node.neighbors.length; i++){
+			if(node.neighbors[i] != tree.root.nodeLabel){
+				computeBetaFromParent(tree, 
+					tree.getNodeByLabel(node.neighbors[i]), node);
+			}
+		}
+	}
+	else{
+
+		//use the betaFromParent value of the parent to calculate
+		//the beta value
+		betaFromParent[node.nodeId] = betaFromParent[parent.nodeId]
+			*tree.getDirectedProbabilityByIds(node.nodeId, parent.nodeId)
+			+ node.val;
+
+		//if it is a leaf node return
+		if(node.neighbors.length === 1 && 
+			tree.getNodeIdByLabel(node.neighbors[0]) === parent.nodeId){
+			return;
+		} 
+
+		//else recursively call the function for all neighbors
+		//who are not the parent
+		else{
+			for(var i = 0; i < node.neighbors.length; i++){
+				if(node.neighbors[i] != parent.nodeLabel){
+					computeBetaFromParent(tree, 
+						tree.getNodeByLabel(node.neighbors[i]), node);
+				}
+			}
+		}
+	}
+}
+
+function computeNetworkValueGeneral_GammaValues(tree){
+
+	//declare the length of each of the gamma arrays
+	gammaToParent.length = tree.numNodes -1;
+	gammaFromRoot.length = tree.root.neighbors.length;
+	gammaFromParent.length = tree.numNodes - 1;
+
+
+	//find all beta values going from the leaf nodes up to the root
+	for(var i = 0; i < tree.root.neighbors.length; i++){
+		computeGammaToParent(tree, tree.getNodeByLabel(tree.root.neighbors[i]),
+			tree.root);
+	}
+
+	//find the beta values the root sends to each child
+	for(var j = 0; j < tree.root.neighbors.length; j++){
+		computeGammaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
+	}
+
+	//find the beta values parents send to the children
+	for(var k = 0; k < tree.root.neighbors.length; k++){
+		computeGammaFromParent(tree, tree.getNodeByLabel(tree.root.neighbors[k]),
+			tree.root);
+	}
+
+	//get the canvas
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+
+	//Display values on the screen
+	ctx.fillStyle = "#000000";
+	ctx.font = "20px Georgia";
+	ctx.fillText("gammaToParent: " + gammaToParent, 150, 620);
+	ctx.fillText("gammaFromRoot: " + gammaFromRoot, 150, 640);
+	ctx.fillText("gammaFromParent: " + gammaFromParent, 150, 660);
 }
 
 /**
 	Compute the gamma value for the network using
 	dynamic programming
 */
-function computeGammaValDynamic(tree, node, parent){
+function computeGammaToParent(tree, node, parent){
 
 	//if the node is a leaf node return the node val
 	if(node.neighbors.length === 1 && 
 		tree.getNodeIdByLabel(node.neighbors[0]) === parent.nodeId){
-		gammaArray[node.nodeId] = node.val;
+		gammaToParent[node.nodeId] = node.val*node.val;
 	}
 
 	else{
@@ -574,13 +708,14 @@ function computeGammaValDynamic(tree, node, parent){
 		//node is the root, excluding the parent
 		//This means gamma is the sum of:
 		//alpha (all paths from within the tree to the root)
-		//beta (all pahts from the root down to another node)
+		//beta (all paths from the root down to another node)
 		//paths from one node to another in the tree, passing
 		//through the root
 		//gamma of all subtrees (where the roots of those
 		//trees are the children of the current root)
-		gammaArray[node.nodeId] = alphaArray[node.nodeId];
-		gammaArray[node.nodeId] += betaArray[node.nodeId];
+		gammaToParent[node.nodeId] = alphaToParent[node.nodeId];
+		gammaToParent[node.nodeId] += betaToParent[node.nodeId];
+		gammaToParent[node.nodeId] += node.val * node.val;
 
 		for(var i = 0; i < node.neighbors.length; i++){
 			if(tree.getNodeIdByLabel(node.neighbors[i]) !== parent.nodeId){
@@ -590,24 +725,103 @@ function computeGammaValDynamic(tree, node, parent){
 						tree.getNodeIdByLabel(node.neighbors[j]) !== parent.nodeId){
 
 					//find the probability going from the ith to the jth subtree
-					gammaArray[node.nodeId] += 
-						alphaArray[tree.getNodeIdByLabel(node.neighbors[i])] *	
+					gammaToParent[node.nodeId] += 
+						alphaToParent[tree.getNodeIdByLabel(node.neighbors[i])] *	
 						tree.getDirectedProbabilityByIds(
 							tree.getNodeIdByLabel(node.neighbors[i]),
 							node.nodeId) * 
 						tree.getDirectedProbabilityByIds(node.nodeId, 
 							tree.getNodeIdByLabel(node.neighbors[j])) *
-						betaArray[tree.getNodeIdByLabel(node.neighbors[j])];			
+						betaToParent[tree.getNodeIdByLabel(node.neighbors[j])];			
 					}
 				}
 
 				//find the gamma value of node i
-				computeGammaValDynamic(tree, tree.getNodeByLabel(node.neighbors[i]), 
+				computeGammaToParent(tree, tree.getNodeByLabel(node.neighbors[i]), 
 					node);
 
 				//gamma of this node depends on gamma of the children
-				gammaArray[node.nodeId] += gammaArray[tree.getNodeIdByLabel(node.neighbors[i])
-				];
+				gammaToParent[node.nodeId] += gammaToParent[tree.getNodeIdByLabel(node.neighbors[i])];
+			}
+		}
+	}
+}
+
+/**
+	Compute the gamma value from the root to each of the root's children
+*/
+function computeGammaFromRoot(tree, node){
+
+	if(tree.root.neighbors.length === 1){
+		gammaFromRoot[node.rootId] = tree.root.val*tree.root.val;
+		return;
+	}
+
+	gammaFromRoot[node.rootId] = alphaFromRoot[node.rootId] +
+		betaFromRoot[node.rootId] + tree.root.val*tree.root.val;
+	for(var i = 0; i < tree.root.neighbors.length; i++){
+		var curChild = tree.root.neighbors[i];
+		if(curChild != node.nodeLabel){
+			var curChildIndex = tree.getNodeIdByLabel(curChild);
+
+			gammaFromRoot[node.rootId] += gammaToParent[curChildIndex];
+
+			for(var j = 0; j < tree.root.neighbors.length; j++){
+				var secondChild = tree.root.neighbors[j];
+
+				if(i != j && secondChild != node.nodeLabel){
+					var secondChildIndex = tree.getNodeIdByLabel(secondChild);
+
+					gammaFromRoot[node.rootId] += alphaToParent[curChildIndex]*
+						tree.getDirectedProbabilityByIds(curChildIndex, tree.root.nodeId)*
+						tree.getDirectedProbabilityByIds(tree.root.nodeId, secondChildIndex)*
+						betaToParent[secondChildIndex];
+
+				}
+			}
+
+		}
+
+	}
+
+}
+
+/**
+	compute the gamma value from the parent to the child node
+*/
+function computeGammaFromParent(tree, node, parent){
+	//if the parent of the node is the root
+	//then use the betaFromRoot to that child
+	if(parent.nodeId === tree.root.nodeId){
+		gammaFromParent[node.nodeId] = gammaFromRoot[node.rootId] +
+			node.val*node.val + betaFromParent[node.nodeId] +
+			alphaFromParent[node.nodeId];
+		for(var i = 0; i < node.neighbors.length; i++){
+			if(node.neighbors[i] != parent.nodeLabel){
+				computeGammaFromParent(tree, 
+					tree.getNodeByLabel(node.neighbors[i]), node);
+			}
+		}
+	}
+	else{
+		gammaFromParent[node.nodeId] = gammaFromParent[parent.nodeId] +
+			node.val*node.val + betaFromParent[node.nodeId] +
+			alphaFromParent[node.nodeId];
+
+		//if it is a leaf node return
+		if(node.neighbors.length === 1 && 
+			tree.getNodeIdByLabel(node.neighbors[0]) === parent.nodeId){
+			return;
+		} 
+
+		//else recursively call the function for all neighbors
+		//who are not the parent
+		else{
+			for(var i = 0; i < node.neighbors.length; i++){
+				if(node.neighbors[i] != parent.nodeLabel){
+					computeGammaFromParent(tree, 
+						tree.getNodeByLabel(node.neighbors[i]), node);
+				}
 			}
 		}
 	}
