@@ -1,5 +1,31 @@
 //VALID TREES
 
+var test_tree = {
+	numNodes : 6,
+	nodeLabels : ["a", "b", "c", "d", "e", "f"],
+	vals : [3, 1, 1, 2, 2, 1],
+	coords : [	
+				[3,1],
+				[2,3],
+				[4,3],
+				[1,5],
+				[3,5],
+				[5,5]
+			 ],
+	probBtwNodes : [
+					["a", "b", 1],
+					["b", "a", 1],
+					["a", "c", .5],
+					["c", "a", .25],
+					["b", "d", 1],
+					["d", "b", .5],
+					["b", "e", .75],
+					["e", "b", .5],
+					["c", "f", 1],
+					["f", "c", .5]
+					]
+};
+
 var tree_valid1 = {
 	numNodes : 4,
 	nodeLabels : [0, 1, 2, 3],

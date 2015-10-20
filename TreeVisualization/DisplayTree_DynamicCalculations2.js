@@ -17,7 +17,7 @@ var gammaFromRoot = [];
 */
 function readTree(){
 
-	var data = tree_valid_dynamic_test;
+	var data = test_tree;
 
 	//assign node ids 0 through numNodes-1 for the dynamic
 	//calculation of the network values
@@ -360,7 +360,6 @@ function computeNetworkValueGeneral_AlphaValues(tree){
 	alphaFromRoot.length = tree.root.neighbors.length;
 	alphaFromParent.length = tree.numNodes - 1;
 
-
 	//find all alpha values going from the leaf nodes up to the root
 	for(var i = 0; i < tree.root.neighbors.length; i++){
 		computeAlphaToParent(tree, tree.getNodeByLabel(tree.root.neighbors[i]),
@@ -447,7 +446,7 @@ function computeAlphaFromRoot(tree, node){
 			var curChildIndex = tree.getNodeIdByLabel(curChild);
 			alphaFromRoot[node.rootId] += alphaToParent[curChildIndex]
 				*tree.getDirectedProbabilityByIds(
-					curChildIndex, root.nodeId);
+					curChildIndex, tree.root.nodeId);
 		}
 	}
 }
@@ -589,7 +588,7 @@ function computeBetaFromRoot(tree, node){
 			var curChildIndex = tree.getNodeIdByLabel(curChild);
 			betaFromRoot[node.rootId] += betaToParent[curChildIndex]
 				*tree.getDirectedProbabilityByIds(
-					root.nodeId,curChildIndex);
+					tree.root.nodeId,curChildIndex);
 		}
 	}
 }
