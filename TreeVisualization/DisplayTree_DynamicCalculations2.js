@@ -791,9 +791,16 @@ function computeGammaFromParent(tree, node, parent, grandparent){
 	//use betaFromParent
 	gammaFromParent[node.nodeId] = 0;
 
+	//alpha value will be a combination of alpha from parent of the parent
+	//alpha values of all children of the parent excluding node
+	//and the parent value
 	var alphaVal = parent.val + 
 		tree.getDirectedProbabilityByIds(grandparent.nodeId, parent.nodeId)*
 		alphaFromParent[parent.nodeId];
+
+	//beta value will be a combination of beta from parent of the parent
+	//beta values of all children of the parent excluding node
+	//and the parent value
 	var betaVal = parent.val + 
 		tree.getDirectedProbabilityByIds(parent.nodeId, grandparent.nodeId)*
 		betaFromParent[parent.nodeId];
@@ -805,8 +812,12 @@ function computeGammaFromParent(tree, node, parent, grandparent){
 
 			var curNodeId = tree.getNodeIdByLabel(parent.neighbors[j]);
 			
+			//add the gamma value of all subtrees rooted at the children
+			//of parent (excluding node)
 			gammaFromParent[node.nodeId] += gammaToParent[curNodeId];
-			
+
+			//find the paths between all sets of children of parent
+			//excluding paths into or out of node
 			for(var k = 0; k <parent.neighbors.length; k++){
 				if(parent.neighbors[k] != node.nodeLabel && 
 					parent.neighbors[k] != grandparent.nodeLabel && j != k){
@@ -820,17 +831,21 @@ function computeGammaFromParent(tree, node, parent, grandparent){
 				}
 			}
 
+			//add the beta value from the child to the parent
 			betaVal += betaToParent[curNodeId] *
 				tree.getDirectedProbabilityByIds(parent.nodeId, curNodeId);
+
+			//add the alpha value from the child to the parent
 			alphaVal += alphaToParent[curNodeId]*
 				tree.getDirectedProbabilityByIds(curNodeId, parent.nodeId);
 
-			//start in another child of the parent an end in the grandparent
+			//start in a child of the parent an end in the grandparent
 			gammaFromParent[node.nodeId] += alphaToParent[curNodeId]*
 				tree.getDirectedProbabilityByIds(curNodeId, parent.nodeId)*
 				tree.getDirectedProbabilityByIds(parent.nodeId, grandparent.nodeId)*
 				betaFromParent[parent.nodeId];
 
+			//start in the grandparent and end in the grandparent
 			gammaFromParent[node.nodeId] += alphaFromParent[parent.nodeId]*
 				tree.getDirectedProbabilityByIds(grandparent.nodeId, parent.nodeId)*
 				tree.getDirectedProbabilityByIds(parent.nodeId, curNodeId)*
@@ -838,6 +853,10 @@ function computeGammaFromParent(tree, node, parent, grandparent){
 		}
 	}
 
+	//add the gamma value from the parent
+	//parent value * the beta value
+	//parent value * the alpha value
+	//minus parent value * parent value
 	gammaFromParent[node.nodeId] += gammaFromParent[parent.nodeId] 
 		- parent.val*parent.val + parent.val * betaVal
 		+ parent.val*alphaVal;
@@ -921,7 +940,9 @@ function Tree(numNodes, nodeList, edgeProbs, root){
 		}
 		return null;
 	}
-
+	/**
+		get the node label for the node based on the node id
+	*/
 	this.getNodeLabelById = function(theId){
 		for(var i = 0; i < this.numNodes; i++){
 			if(this.nodeList[i].nodeId === theId){
