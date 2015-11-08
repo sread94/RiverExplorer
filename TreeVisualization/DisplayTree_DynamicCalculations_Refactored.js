@@ -343,9 +343,6 @@ function computeNetworkValueGeneral(tree){
 */
 function computeNetworkValueGeneral_AlphaValues(tree){
 
-	//declare the length of each of the alpha arrays
-	alphaFromParent.length = tree.numNodes - 1;
-
 	//calculate the alpha to parent values of the whole tree
 	computeAlphaToParent(tree, tree.root, -1);
 
@@ -353,20 +350,10 @@ function computeNetworkValueGeneral_AlphaValues(tree){
 	alphaToParent.length = tree.numNodes -1;
 
 	//find the alpha values the root sends to each child
-	for(var j = 0; j < tree.root.neighbors.length; j++){
-		computeAlphaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
-	}
+	computeAlphaFromParent(tree);
 
-	//find the alpha values parents send to the children
-	for(var k = 0; k < tree.root.neighbors.length; k++){
-		var curNode = tree.getNodeByLabel(tree.root.neighbors[k]);
-		for(var m = 0; m < curNode.neighbors.length; m++){
-			if(curNode.neighbors[m]!= tree.root.nodeLabel){
-				computeAlphaFromParent(tree, tree.getNodeByLabel(curNode.neighbors[m]),
-					tree.getNodeByLabel(tree.root.neighbors[k]), tree.root);
-			}	
-		}
-	}
+	//cut off the calculation alpha from parent of the root
+	alphaFromParent.length = tree.numNodes - 1;
 
 	//get the canvas
 	var c=document.getElementById("myCanvas");
@@ -417,6 +404,31 @@ function computeAlphaToParent(tree, node, parent){
 }
 
 /**
+	Compute the alpha values for the tree from the parent
+*/
+function computeAlphaFromParent(tree){
+
+	//loop through all children of the root
+	for(var j = 0; j < tree.root.neighbors.length; j++){
+
+		//calculate the alpha from parent for all children of the root
+		computeAlphaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
+		var curNode = tree.getNodeByLabel(tree.root.neighbors[j]);
+
+		//loop through the children of the current node
+		for(var m = 0; m < curNode.neighbors.length; m++){
+			if(curNode.neighbors[m]!= tree.root.nodeLabel){
+				
+				//calculate the child's alpha value
+				computeAlphaFromChildOfRoot(tree, tree.getNodeByLabel(curNode.neighbors[m]),
+					curNode, tree.root);
+			}	
+		}
+	}
+
+}
+
+/**
 	compute the alpha values going from the root
 	to the given node
 */
@@ -445,7 +457,7 @@ function computeAlphaFromRoot(tree, node){
 	compute the alpha values coming down the tree from
 	the parent
 */
-function computeAlphaFromParent(tree, node, parent, grandparent){
+function computeAlphaFromChildOfRoot(tree, node, parent, grandparent){
 
 	//use the alphaFromParent value of the parent to calculate
 	//the alpha value
@@ -485,30 +497,17 @@ function computeAlphaFromParent(tree, node, parent, grandparent){
 */
 function computeNetworkValueGeneral_BetaValues(tree){
 
-	//declare the length of each of the beta arrays
-	betaFromParent.length = tree.numNodes - 1;
-
 	//find all beta values going from the leaf nodes up to the root
 	computeBetaToParent(tree, tree.root, -1);
 
 	//do not include root beta to parent value
 	betaToParent.length = tree.numNodes -1;
 
-	//find the beta values the root sends to each child
-	for(var j = 0; j < tree.root.neighbors.length; j++){
-		computeBetaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
-	}
+	//find all beta values from parent
+	computeBetaFromParent(tree)
 
-	//find the beta values parents send to the children
-	for(var k = 0; k < tree.root.neighbors.length; k++){
-		var curNode = tree.getNodeByLabel(tree.root.neighbors[k]);
-		for(var m = 0; m < curNode.neighbors.length; m++){
-			if(curNode.neighbors[m]!= tree.root.nodeLabel){
-				computeBetaFromParent(tree, tree.getNodeByLabel(curNode.neighbors[m]),
-					curNode, tree.root);
-			}
-		}
-	}
+	//do not include root beta from parent value
+	betaFromParent.length = tree.numNodes - 1;
 
 	//get the canvas
 	var c=document.getElementById("myCanvas");
@@ -558,6 +557,20 @@ function computeBetaToParent(tree, node, parent){
 	}
 }
 
+function computeBetaFromParent(tree){
+	//find the beta values the root sends to each child
+	for(var j = 0; j < tree.root.neighbors.length; j++){
+		computeBetaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
+		var curNode = tree.getNodeByLabel(tree.root.neighbors[j]);
+		for(var m = 0; m < curNode.neighbors.length; m++){
+			if(curNode.neighbors[m]!= tree.root.nodeLabel){
+				computeBetaFromChildOfRoot(tree, tree.getNodeByLabel(curNode.neighbors[m]),
+					curNode, tree.root);
+			}
+		}
+	}
+}
+
 /**
 	compute the beta value from the root to each child
 */
@@ -585,7 +598,7 @@ function computeBetaFromRoot(tree, node){
 /**
 	find the beta values from the parents to the children
 */
-function computeBetaFromParent(tree, node, parent, grandparent){
+function computeBetaFromChildOfRoot(tree, node, parent, grandparent){
 
 	//use the betaFromParent value of the parent to calculate
 	//the beta value
@@ -626,31 +639,17 @@ function computeBetaFromParent(tree, node, parent, grandparent){
 */
 function computeNetworkValueGeneral_GammaValues(tree){
 
-	//declare the length of each of the gamma arrays
-	gammaFromParent.length = tree.numNodes - 1;
-
-
 	//find all gamma values going from the leaf nodes up to the root
 	computeGammaToParent(tree, tree.root, -1);
 
 	//exclude the root value from the gamma array
 	gammaToParent.length = tree.numNodes - 1;
 
-	//find the gamma values the root sends to each child
-	for(var j = 0; j < tree.root.neighbors.length; j++){
-		computeGammaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
-	}
+	//compute gamma from parent values
+	computeGammaFromParent(tree);
 
-	//find the gamma values parents send to the children
-	for(var k = 0; k < tree.root.neighbors.length; k++){
-		var curNode = tree.getNodeByLabel(tree.root.neighbors[k]);
-		for(var m = 0; m < curNode.neighbors.length; m++){
-			if(curNode.neighbors[m]!= tree.root.nodeLabel){
-				computeGammaFromParent(tree, tree.getNodeByLabel(curNode.neighbors[m]),
-					curNode, tree.root);
-			}
-		}
-	}
+	//exclude gamma from parent for the root
+	gammaFromParent.length = tree.numNodes - 1;
 
 	//get the canvas
 	var c=document.getElementById("myCanvas");
@@ -720,6 +719,20 @@ function computeGammaToParent(tree, node, parent){
 	}
 }
 
+function computeGammaFromParent(tree){
+	//find the gamma values the root sends to each child
+	for(var j = 0; j < tree.root.neighbors.length; j++){
+		computeGammaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
+		var curNode = tree.getNodeByLabel(tree.root.neighbors[j]);
+		for(var m = 0; m < curNode.neighbors.length; m++){
+			if(curNode.neighbors[m]!= tree.root.nodeLabel){
+				computeGammaFromChildOfRoot(tree, tree.getNodeByLabel(curNode.neighbors[m]),
+					curNode, tree.root);
+			}
+		}
+	}
+}
+
 /**
 	Compute the gamma value from the root to each of the root's children
 */
@@ -773,7 +786,7 @@ function computeGammaFromRoot(tree, node){
 /**
 	compute the gamma value from the parent to the child node
 */
-function computeGammaFromParent(tree, node, parent, grandparent){
+function computeGammaFromChildOfRoot(tree, node, parent, grandparent){
 
 	//use betaFromParent
 	gammaFromParent[node.nodeId] = 0;
