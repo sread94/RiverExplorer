@@ -335,6 +335,7 @@ function computeNetworkValueGeneral(tree){
 	computeNetworkValueGeneral_AlphaValues(tree);
 	computeNetworkValueGeneral_BetaValues(tree);
 	computeNetworkValueGeneral_GammaValues(tree);
+	computeTotalNetworkValue(tree, 1, tree.root.nodeId);
 
 }
 
@@ -853,6 +854,46 @@ function computeGammaFromChildOfRoot(tree, node, parent, grandparent){
 				tree.getNodeByLabel(node.neighbors[i]), node, parent);
 		}
 	}
+}
+
+/**
+	Calculate the total value of the river network given a pair
+	of nodes. The pair must be a child and a parent and must
+	be given in the correct order.
+
+	No matter the child-parent pair the value of the network
+	will be the same.
+
+	The total value is printed to the screen then returned
+*/
+function computeTotalNetworkValue(tree, child, parent){
+
+	//find the probability from going from child to parent
+	//and parent to child
+	var childToParent = tree.getDirectedProbabilityByIds(child, parent);
+	var parentToChild = tree.getDirectedProbabilityByIds(parent, child);
+
+	//calculate the value of the network
+	//gamma of each subtree
+	//plus the paths starting in the child's subtree and ending
+	//in the parent's subtree
+	//plust the paths starting in the parent's subtree and ending
+	//in the child's subtree
+	var totalVal = gammaToParent[child] + gammaFromParent[child] +
+		alphaToParent[child]*childToParent*betaFromParent[child] +
+		alphaFromParent[child]*parentToChild* betaToParent[child];
+
+
+	//get the canvas
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+
+	//Display values on the screen
+	ctx.fillStyle = "#000000";
+	ctx.font = "20px Georgia";
+	ctx.fillText("Total Network Value: " + totalVal, 150, 680);
+
+	return totalVal;
 }
 
 /**
