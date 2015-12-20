@@ -738,7 +738,11 @@ function computeGammaFromRoot(tree, node){
 
 	gammaFromParent[node.nodeId] = 0;
 
+
+	//alpha from parent
 	var alphaVal = tree.root.val;
+
+	//beta from parent
 	var betaVal = tree.root.val;
 
 	//loop through all children and find all paths from a node in

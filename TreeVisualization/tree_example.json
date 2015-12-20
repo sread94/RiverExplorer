@@ -26,6 +26,52 @@ var test_tree = {
 					]
 };
 
+var test_tree_two = {
+	numNodes: 6,
+	nodeLabels : ["a", "b", "c", "d", "e", "f"],
+	vals : [5, 4, 2, 1, 2, 3],
+	coords : [
+				[4,1],
+				[3,3],
+				[5,3],
+				[1,5],
+				[3,5],
+				[5,5]
+			],
+	probBtwNodes : [
+					["a", "b", .75],
+					["b", "a", .5],
+					["b", "d", .75],
+					["d", "b", .5],
+					["b", "e", .25],
+					["e", "b", .5],
+					["b", "f", .5],
+					["f", "b", .75],
+					["a", "c", 1],
+					["c", "a", .25]
+					]
+};
+
+var test_tree_three = {
+	numNodes: 4,
+	nodeLabels : ["a", "b", "c", "d"],
+	vals : [5, 4, 2, 1, 2, 3],
+	coords : [
+				[4,1],
+				[2,3],
+				[4,3],
+				[6,3]
+			],
+	probBtwNodes : [
+					["a", "b", .75],
+					["b", "a", .5],
+					["a", "c", .25],
+					["c", "a", .5],
+					["a", "d", .25],
+					["d", "a", .75],
+					]
+};
+
 var tree_valid1 = {
 	numNodes : 4,
 	nodeLabels : [0, 1, 2, 3],
