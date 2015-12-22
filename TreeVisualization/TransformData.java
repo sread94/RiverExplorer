@@ -20,14 +20,16 @@ public class TransformData {
     //number of edges in the network
     public static int numEdges;
 
+    //number of barriers in the network
     public static int numBarriers;
 
     //1 index for every line in the file (edge)
     public static String[] nodes;
 
-    //1 index for every line in the file (barrier)
+    //1 index for every line in the file (node)
     public static String[] edges;
 
+    //1 index for every line in the file (barrier)
     public static String[] barriers;
 
     //node labels
@@ -79,30 +81,63 @@ public class TransformData {
         
     }
 
+    /**
+    * Orders the parsing of the files
+    * and the creation of the JSON file
+    */
     public static void parseFile(){
 
+        //find the size of each file
         findNumNodes(edgeFileName);
         findNumEdges(nodeFileName);
+        findNumBarriers(barrierFileName);
+
+        //parse the files
         findNodesArr(edgeFileName);
         findEdgeArr(nodeFileName);
-        findNumBarriers(barrierFileName);
         findBarrersArr(barrierFileName);
+
+        //find the node lables
         findLabels();
+
+        //find the habitat values
+        //which are the segment length
         findVals();
+
+        //find the coordinates
         findLatArr();
         findLongArr();
 
+        //create an array for each edge
+        //which node it points to
         findToNodeArray();
+        //which node it comes from
         findFromNodeArray();
+
+        //calculate the probabilities
+        //for each barrier
         findBarrierPassageProbs();
+
+        //find all pairs of neighboring nodes
         findNeighbors();
+
+        //find the probability of going between
+        //each node pair
         findProbs();
 
+        //create the json string
         createJSON();
+
+        //write it to a file
         writeJSONToFile();
     }
 
 
+    /**
+    * Find the total number of nodes.
+    * cound the number of lines and don't count the
+    * first line because it is the header
+    */
     public static void findNumNodes(String fileName){
         // This will reference one line at a time
         String line = null;
@@ -139,6 +174,11 @@ public class TransformData {
         System.out.println("Num nodes " + numNodes);
     }
 
+    /**
+    * Find the total number of edges.
+    * cound the number of lines and don't count the
+    * first line because it is the header
+    */
     public static void findNumEdges(String fileName){
         // This will reference one line at a time
         String line = null;
@@ -178,6 +218,11 @@ public class TransformData {
         System.out.println("Num edges " + numEdges);
     }
 
+    /**
+    * Find the total number of barriers.
+    * cound the number of lines and don't count the
+    * first line because it is the header
+    */
     public static void findNumBarriers(String fileName){
         // This will reference one line at a time
         String line = null;
@@ -214,6 +259,9 @@ public class TransformData {
         System.out.println("Num barriers " + numBarriers);
     }
 
+    /**
+    * parse the node file and save each line of data in the nodes array
+    */
     public static void findNodesArr(String fileName){
         
         String line = null;
@@ -253,6 +301,9 @@ public class TransformData {
         }
     }
 
+    /**
+    * parse the edge file and save each line of data in the edge array
+    */
     public static void findEdgeArr(String fileName){
         
         String line = null;
@@ -292,6 +343,9 @@ public class TransformData {
         }
     }
 
+    /**
+    * parse the barrier file and save each line of data in the barrier array
+    */
     public static void findBarrersArr(String fileName){
         
         String line = null;
@@ -332,6 +386,10 @@ public class TransformData {
     }
 
 
+    /**
+    * parse each line of the nodes array
+    * and find the corresponding label
+    */
     public static void findLabels(){
 
         labels = new String[numNodes];
@@ -344,6 +402,9 @@ public class TransformData {
 
     }
 
+    /**
+    * parse the nodes array for the length of the segment
+    */
     public static void findVals(){
 
         vals = new String[numNodes];
@@ -360,6 +421,9 @@ public class TransformData {
 
     }
 
+    /**
+    * Parse the nodes edges array for the latitude
+    */
     public static void findLatArr(){
 
         latArr = new String[numEdges];
@@ -374,6 +438,9 @@ public class TransformData {
         }
     }
 
+    /**
+    * Parse the nodes edges array for the longitude
+    */
     public static void findLongArr(){
 
         longArr = new String[numEdges];
@@ -389,6 +456,9 @@ public class TransformData {
         
     }
 
+    /**
+    * For each node find the edge it does to
+    */
     public static void findToNodeArray(){
 
         toNodeArray = new String[numNodes][2];
@@ -407,6 +477,9 @@ public class TransformData {
 
     }
 
+    /**
+    * For each node find the edge it comes from
+    */
     public static void findFromNodeArray(){
 
         fromNodeArray = new String[numNodes][2];
@@ -425,6 +498,10 @@ public class TransformData {
 
     }
 
+    /**
+    * Find all pairs of nodes by matching the from node of one
+    * node to the to node of the others.
+    */
     public static void findNeighbors(){
 
         neighbors = new ArrayList<String[]>();
@@ -445,6 +522,10 @@ public class TransformData {
 
     }
 
+    /**
+    * Find the barrier probability
+    * Store them as barrier id and then value
+    */
     public static void findBarrierPassageProbs(){
 
         barrierPassageProbs = new HashMap<String, String>();
@@ -461,6 +542,9 @@ public class TransformData {
 
     }
 
+    /**
+    * save the probibility matrix
+    */
     public static void findProbs(){
 
         probs = new String[neighbors.size()*2][3];
@@ -474,6 +558,9 @@ public class TransformData {
             double downstreamPass = 1;
             if(barPassage!=null){
                 barPassageVal = Double.parseDouble(barPassage);
+                if(barPassageVal <0){
+                    barPassageVal = 1;
+                }
                 downstreamPass = 1 - Math.pow(1-barPassageVal, .25);
             }
             
@@ -496,6 +583,9 @@ public class TransformData {
 
     }
 
+    /**
+    * create the JSON string
+    */
     public static void createJSON(){
 
         //set the number of nodes
@@ -553,6 +643,7 @@ public class TransformData {
 
     /**
     * Modified code from http://www.mkyong.com/java/how-to-write-to-file-in-java-bufferedwriter-example/
+    * Save the JSON string to a file
     */
     public static void writeJSONToFile(){
         
