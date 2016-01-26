@@ -8,13 +8,15 @@ var betaFromParent = [];
 var gammaToParent = [];
 var gammaFromParent = [];
 
+var scaleFactor = 10;
+
 /**
 	This function reads in JSON data
 	and creates a tree
 */
 function readTree(){
 
-	var data = test_tree;
+	var data = the_tree;
 
 	//assign node ids 0 through numNodes-1 for the dynamic
 	//calculation of the network values
@@ -48,8 +50,8 @@ function readTree(){
 	if(validTree === "true"){
 
 		//if the tree is valid draw it
-		drawTree(theTree);
-		addMouseEvents(theTree);
+		//drawTree(theTree);
+		//addMouseEvents(theTree);
 		computeNetworkValueGeneral(theTree);
 	}
 	else{
@@ -227,7 +229,7 @@ function drawTree(tree){
 	var ctx=c.getContext("2d");
 
 	//draw all the edges
-	for(var j = 0; j < tree.edgeProbs.length; j++){
+	/**for(var j = 0; j < tree.edgeProbs.length; j++){
 
 		//get the nodes that belong to the edge
 		var startNode = tree.getNodeByLabel(tree.edgeProbs[j][0]);
@@ -241,13 +243,13 @@ function drawTree(tree){
 
 		//draw a path from the starting node to the ending node
 		ctx.beginPath();
-		ctx.moveTo(startNode.coordinates[0]*75 + shift, startNode.coordinates[1]*75);
-		ctx.lineTo(endNode.coordinates[0]*75 + shift, endNode.coordinates[1]*75);
+		ctx.moveTo(startNode.coordinates[0]*scaleFactor + shift, startNode.coordinates[1]*scaleFactor);
+		ctx.lineTo(endNode.coordinates[0]*scaleFactor + shift, endNode.coordinates[1]*scaleFactor);
 		ctx.stroke();
 
 		//find the distance between the nodes in the x and y directions
-		var distX = startNode.coordinates[0]*75 - endNode.coordinates[0]*75;
-		var distY = startNode.coordinates[1]*75 - endNode.coordinates[1]*75;
+		var distX = startNode.coordinates[0]*scaleFactor - endNode.coordinates[0]*scaleFactor;
+		var distY = startNode.coordinates[1]*scaleFactor - endNode.coordinates[1]*scaleFactor;
 
 		var shift2 = startNode.coordinates[0] > endNode.coordinates[0] ? 12 : -12;
 
@@ -255,9 +257,11 @@ function drawTree(tree){
 		ctx.fillStyle = "#000000";
 		ctx.font = "20px Georgia";
 		ctx.fillText("" + tree.edgeProbs[j][2], 
-			startNode.coordinates[0]*75 - distX/2 + shift*2 + shift2, 
-			startNode.coordinates[1]*75 - distY/2 + shift*2);
-	}
+			startNode.coordinates[0]*scaleFactor - distX/2 + shift*2 + shift2, 
+			startNode.coordinates[1]*scaleFactor - distY/2 + shift*2);
+	}*/
+
+	window.alert("drawing nodes:");
 
 	//draw the nodes on the screen
 	for(var i = 0; i < tree.numNodes; i++){
@@ -266,17 +270,19 @@ function drawTree(tree){
 
 		//draw a circle for the node based on the coordinates given
 		ctx.beginPath();
-		ctx.arc(75*tree.nodeList[i].coordinates[0],
-			75*tree.nodeList[i].coordinates[1],30,0,2*Math.PI);
+		ctx.arc(scaleFactor*tree.nodeList[i].coordinates[0],
+			scaleFactor*tree.nodeList[i].coordinates[1] + 75,10,0,2*Math.PI);
 		ctx.fill();
 
 		//write the value of the node in the center
 		ctx.fillStyle = "#000000";
 		ctx.font = "20px Georgia";
 		ctx.fillText("" + tree.nodeList[i].val, 
-			75*tree.nodeList[i].coordinates[0]-5, 
-			75*tree.nodeList[i].coordinates[1]);
+			scaleFactor*tree.nodeList[i].coordinates[0]-5, 
+			scaleFactor*tree.nodeList[i].coordinates[1]);
 	}
+
+	window.alert("drawing nodes done");
 
 }
 
@@ -332,10 +338,21 @@ function checkIfOnEdge(tree, xPos, yPos){
 */
 function computeNetworkValueGeneral(tree){
 
+	//window.alert("Calculating...");
+
 	computeNetworkValueGeneral_AlphaValues(tree);
+
+	//window.alert("alpha done");
+
 	computeNetworkValueGeneral_BetaValues(tree);
+
+	//window.alert("beta done");
+
 	computeNetworkValueGeneral_GammaValues(tree);
-	computeTotalNetworkValue(tree, 1, tree.root.nodeId);
+
+	//window.alert("gamma done");
+
+	computeTotalNetworkValue(tree, 0, 1);
 
 }
 
@@ -363,8 +380,8 @@ function computeNetworkValueGeneral_AlphaValues(tree){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("alphaToParent: " + alphaToParent, 150, 500);
-	ctx.fillText("alphaFromParent: " + alphaFromParent, 150, 520);
+	//ctx.fillText("alphaToParent: " + alphaToParent, 150, 500);
+	//ctx.fillText("alphaFromParent: " + alphaFromParent, 150, 520);
 }
 
 /**
@@ -486,7 +503,7 @@ function computeAlphaFromChildOfRoot(tree, node, parent, grandparent){
 	else{
 		for(var i = 0; i < node.neighbors.length; i++){
 			if(node.neighbors[i] != parent.nodeLabel){
-				computeAlphaFromParent(tree, 
+				computeAlphaFromChildOfRoot(tree, 
 					tree.getNodeByLabel(node.neighbors[i]), node, parent);
 			}
 		}
@@ -505,7 +522,7 @@ function computeNetworkValueGeneral_BetaValues(tree){
 	betaToParent.length = tree.numNodes -1;
 
 	//find all beta values from parent
-	computeBetaFromParent(tree)
+	computeBetaFromParent(tree);
 
 	//do not include root beta from parent value
 	betaFromParent.length = tree.numNodes - 1;
@@ -517,8 +534,8 @@ function computeNetworkValueGeneral_BetaValues(tree){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("betaToParent: " + betaToParent, 150, 560);
-	ctx.fillText("betaFromParent: " + betaFromParent, 150, 580);
+	//ctx.fillText("betaToParent: " + betaToParent, 150, 560);
+	//ctx.fillText("betaFromParent: " + betaFromParent, 150, 580);
 
 }
 
@@ -559,6 +576,7 @@ function computeBetaToParent(tree, node, parent){
 }
 
 function computeBetaFromParent(tree){
+
 	//find the beta values the root sends to each child
 	for(var j = 0; j < tree.root.neighbors.length; j++){
 		computeBetaFromRoot(tree, tree.getNodeByLabel(tree.root.neighbors[j]));
@@ -627,8 +645,8 @@ function computeBetaFromChildOfRoot(tree, node, parent, grandparent){
 	else{
 		for(var i = 0; i < node.neighbors.length; i++){
 			if(node.neighbors[i] != parent.nodeLabel){
-				computeBetaFromParent(tree, 
-					tree.getNodeByLabel(node.neighbors[i]), node);
+				computeBetaFromChildOfRoot(tree, 
+					tree.getNodeByLabel(node.neighbors[i]), node, parent);
 			}
 		}
 	}
@@ -659,8 +677,8 @@ function computeNetworkValueGeneral_GammaValues(tree){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("gammaToParent: " + gammaToParent, 150, 620);
-	ctx.fillText("gammaFromParent: " + gammaFromParent, 150, 640);
+	//ctx.fillText("gammaToParent: " + gammaToParent, 150, 620);
+	//ctx.fillText("gammaFromParent: " + gammaFromParent, 150, 640);
 }
 
 /**
@@ -850,7 +868,7 @@ function computeGammaFromChildOfRoot(tree, node, parent, grandparent){
 	//for all nodes
 	for(var i = 0; i < node.neighbors.length; i++){
 		if(node.neighbors[i] != parent.nodeLabel){
-			computeGammaFromParent(tree, 
+			computeGammaFromChildOfRoot(tree, 
 				tree.getNodeByLabel(node.neighbors[i]), node, parent);
 		}
 	}
@@ -870,8 +888,8 @@ function computeTotalNetworkValue(tree, child, parent){
 
 	//find the probability from going from child to parent
 	//and parent to child
-	var childToParent = tree.getDirectedProbabilityByIds(child, parent);
-	var parentToChild = tree.getDirectedProbabilityByIds(parent, child);
+	var childToParent = tree.getDirectedProbabilityByIds(tree.getNodeIdByLabel(child), tree.getNodeIdByLabel(parent));
+	var parentToChild = tree.getDirectedProbabilityByIds(tree.getNodeIdByLabel(parent), tree.getNodeIdByLabel(child));
 
 	//calculate the value of the network
 	//gamma of each subtree
