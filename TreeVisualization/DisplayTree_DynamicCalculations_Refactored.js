@@ -58,6 +58,7 @@ function readTree(){
 		//addMouseEvents(theTree);
 		computeNetworkValueGeneral(theTree);
 		riverNetwork = theTree;
+		document.getElementById("json").value = getUpdatedNetworkInformation();
 	}
 	else{
 
@@ -911,7 +912,7 @@ function computeTotalNetworkValue(tree, child, parent){
 
 	var totalVal = gammaToParent[childID] + gammaFromParent[childID] +
 		alphaToParent[childID]*childToParent*betaFromParent[childID] +
-		alphaFromParent[childID]*parentToChild* betaToParent[childID];
+		alphaFromParent[childID]*parentToChild*betaToParent[childID];
 
 
 	//get the canvas
@@ -921,7 +922,7 @@ function computeTotalNetworkValue(tree, child, parent){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("Total Network Value: " + totalVal, 150, 600);
+	ctx.fillText("Total Network Value: " + totalVal, 150, 500);
 
 	return totalVal;
 }
@@ -1085,7 +1086,7 @@ function updateBarriers(newBarriers){
 	and a list of flow out value for each barrier
 */
 function getUpdatedNetworkInformation(){
-	var JSON = "{ networkValue: " + computeTotalNetworkValue(riverNetwork, "b", "a")
+	var JSON = "{networkValue: " + computeTotalNetworkValue(riverNetwork, "b", "a")
 		+ ",\nflowInto: [";
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
 		var curAlphaVal = alphaToParent[i] + alphaFromParent[i]*
@@ -1099,8 +1100,9 @@ function getUpdatedNetworkInformation(){
 
 	JSON += "],\nflowOut: [";
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
-		var curBetaVal = betaToParent[i] + betaFromParent[i]*
-			riverNetwork.getDirectedProbabilityByIds(i,parentId[i]);
+		var curBetaVal = betaToParent[i] + alphaToParent[i]*
+			riverNetwork.getDirectedProbabilityByIds(i, parentId[i]) - 
+			riverNetwork.getNodeById(i).val;
 		var curLabel = riverNetwork.getNodeLabelById(i);
 		JSON+= "[" + curLabel + ","+ curBetaVal+"]";
 		if(i!=riverNetwork.numNodes -2){
@@ -1110,7 +1112,6 @@ function getUpdatedNetworkInformation(){
 
 	JSON += "]\n}";
 
-	document.getElementById("json").value = JSON;
 	return JSON;
 
 }
@@ -1140,7 +1141,7 @@ function readUserBarrierUpdates(){
 	}
 
 	updateBarriers(barrierArray);
-	getUpdatedNetworkInformation();
+	document.getElementById("json").value = getUpdatedNetworkInformation();
 
 }
 
