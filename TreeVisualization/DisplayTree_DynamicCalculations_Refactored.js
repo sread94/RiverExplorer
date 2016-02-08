@@ -1086,79 +1086,33 @@ function updateBarriers(newBarriers){
 */
 function getUpdatedNetworkInformation(){
 	var JSON = "{ networkValue: " + computeTotalNetworkValue(riverNetwork, "b", "a")
-		+ ", flowInto: [";
+		+ ",\nflowInto: [";
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
 		var curAlphaVal = alphaToParent[i] + alphaFromParent[i]*
 			riverNetwork.getDirectedProbabilityByIds(parentId[i],i);
-		JSON+= "[" + i + ","+ curAlphaVal+"]";
+		var curLabel = riverNetwork.getNodeLabelById(i);
+		JSON+= "[" + curLabel + ","+ curAlphaVal+"]";
 		if(i!=riverNetwork.numNodes -2){
 			JSON += ",";
 		}
 	}
 
-	JSON += "], flowOut: [";
+	JSON += "],\nflowOut: [";
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
 		var curBetaVal = betaToParent[i] + betaFromParent[i]*
 			riverNetwork.getDirectedProbabilityByIds(i,parentId[i]);
-		JSON+= "[" + i + ","+ curBetaVal+"]";
+		var curLabel = riverNetwork.getNodeLabelById(i);
+		JSON+= "[" + curLabel + ","+ curBetaVal+"]";
 		if(i!=riverNetwork.numNodes -2){
 			JSON += ",";
 		}
 	}
 
-	JSON += "]}";
+	JSON += "]\n}";
 
-
-	window.alert(JSON);
+	document.getElementById("json").value = JSON;
 	return JSON;
 
-}
-
-
-/******** TEST CASES ********/
-
-/**
-* This function changes all edge probabilities
-* to 1 and then recalculates the network value
-*
-* The network value should be the square of the
-* sum of all the network values
-*/
-function sanityCheck_EdgesOne(theTree){
-	
-	window.alert("changing edge to 1");
-	
-	theTree.updateEdgeValues(0,1,1);
-	theTree.updateEdgeValues(1,1,1);
-	theTree.updateEdgeValues(2,1,1);
-	//theTree.updateEdgeValues(3,1,1);
-	//theTree.updateEdgeValues(4,1,1);
-
-	clearCanvas();
-	drawTree(theTree);
-	computeNetworkValueGeneral(theTree);
-}
-
-/**
-* This function changes all edge probabilities
-* to 0 and then recalculates the network value
-*
-* The network value should be the sum of all
-* of the network values squared
-*/
-function sanityCheck_EdgesZero(theTree){
-
-	window.alert("changing edge to 0");
-
-	theTree.updateEdgeValues(0,0,0);
-	theTree.updateEdgeValues(1,0,0);
-	theTree.updateEdgeValues(2,0,0);
-	//theTree.updateEdgeValues(3,0,0);
-	//theTree.updateEdgeValues(4,0,0);
-
-	clearCanvas();
-	drawTree(theTree);
-	computeNetworkValueGeneral(theTree);
 }
 
 /**
@@ -1204,4 +1158,50 @@ function getArrayFromCSV(inputString){
 	}
 	csvArr[csvLength] = inputString;
 	return csvArr;
+}
+
+/******** TEST CASES ********/
+
+/**
+* This function changes all edge probabilities
+* to 1 and then recalculates the network value
+*
+* The network value should be the square of the
+* sum of all the network values
+*/
+function sanityCheck_EdgesOne(theTree){
+	
+	window.alert("changing edge to 1");
+	
+	theTree.updateEdgeValues(0,1,1);
+	theTree.updateEdgeValues(1,1,1);
+	theTree.updateEdgeValues(2,1,1);
+	//theTree.updateEdgeValues(3,1,1);
+	//theTree.updateEdgeValues(4,1,1);
+
+	clearCanvas();
+	drawTree(theTree);
+	computeNetworkValueGeneral(theTree);
+}
+
+/**
+* This function changes all edge probabilities
+* to 0 and then recalculates the network value
+*
+* The network value should be the sum of all
+* of the network values squared
+*/
+function sanityCheck_EdgesZero(theTree){
+
+	window.alert("changing edge to 0");
+
+	theTree.updateEdgeValues(0,0,0);
+	theTree.updateEdgeValues(1,0,0);
+	theTree.updateEdgeValues(2,0,0);
+	//theTree.updateEdgeValues(3,0,0);
+	//theTree.updateEdgeValues(4,0,0);
+
+	clearCanvas();
+	drawTree(theTree);
+	computeNetworkValueGeneral(theTree);
 }

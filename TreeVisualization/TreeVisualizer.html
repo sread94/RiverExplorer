@@ -6,12 +6,20 @@
 	</head>
 
 	<body onload="readTree();">
-		<canvas id="myCanvas" width="725" height="725" 
+		<canvas id="myCanvas" width="725" height="620" 
 		style="border:1px solid #d3d3d3;">
 		Your browser does not support the HTML5 canvas tag.</canvas>
+		
+		
+		<input type="text" id="barrier">
+		<input type="text" id="upstream">
+		<input type="text" id="downstream">
+		<button type="button" onclick="readUserBarrierUpdates()">Update Barrier</button>
+		<textarea id="json" rows="4" cols="75" readonly> </textarea>
 	</body>
 	
 	<script type="text/javascript" src="tree_example.json"></script>
+	<script type="text/javascript" src="ComputeNetworkChange.js"></script>
 	<script type="text/javascript" src="DisplayTree_DynamicCalculations_Refactored.js"></script>
 	
 </html>
