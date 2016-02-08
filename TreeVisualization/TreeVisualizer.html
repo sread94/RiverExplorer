@@ -6,8 +6,7 @@
 	</head>
 
 	<body onload="readTree();">
-		<canvas id="myCanvas" width="725" height="510" 
-		style="border:1px solid #d3d3d3;">
+		<canvas id="myCanvas" width="725" height="405" >
 		Your browser does not support the HTML5 canvas tag.</canvas>
 		
 		
@@ -15,7 +14,8 @@
 		Upstream Prob:<input type="text" id="upstream"><br>
 		Downstream Prob:<input type="text" id="downstream"><br>
 		<button type="button" onclick="readUserBarrierUpdates()">Update Barrier</button><br>
-		<br>Network Info:<br><textarea id="json" rows="4" cols="75" readonly> </textarea>
+		<br>Network Info:<br><textarea id="json" rows="3" cols="75" readonly> </textarea>
+		<br>Calculations:<br><textarea id="calc" rows="6" cols="75" readonly> </textarea>
 	</body>
 	
 	<script type="text/javascript" src="tree_example.json"></script>

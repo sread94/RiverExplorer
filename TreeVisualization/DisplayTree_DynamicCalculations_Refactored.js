@@ -58,7 +58,7 @@ function readTree(){
 		//addMouseEvents(theTree);
 		computeNetworkValueGeneral(theTree);
 		riverNetwork = theTree;
-		document.getElementById("json").value = getUpdatedNetworkInformation();
+		updateNetworkInformation();
 	}
 	else{
 
@@ -922,7 +922,7 @@ function computeTotalNetworkValue(tree, child, parent){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("Total Network Value: " + totalVal, 150, 500);
+	//ctx.fillText("Total Network Value: " + totalVal, 150, 500);
 
 	return totalVal;
 }
@@ -1110,10 +1110,9 @@ function getUpdatedNetworkInformation(){
 		}
 	}
 
-	JSON += "]\n}";
+	JSON += "]}";
 
 	return JSON;
-
 }
 
 /**
@@ -1141,8 +1140,35 @@ function readUserBarrierUpdates(){
 	}
 
 	updateBarriers(barrierArray);
-	document.getElementById("json").value = getUpdatedNetworkInformation();
+	updateNetworkInformation();
 
+}
+
+function updateNetworkInformation(){
+	document.getElementById("json").value = getUpdatedNetworkInformation();
+	document.getElementById("calc").value = formatCalculations();
+}
+
+function formatCalculations(){
+	var calculations = "alphaToParent:\t\t" + formatArray(alphaToParent)
+		+ "\nalphaFromParent:\t" + formatArray(alphaFromParent) 
+		+ "\nbetaToParent:\t\t" + formatArray(betaToParent)
+		+ "\nbetaFromParent:\t\t" + formatArray(betaFromParent)
+		+ "\ngammaToParent:\t\t" + formatArray(gammaToParent)
+		+ "\ngammaFromParent:\t" + formatArray(gammaFromParent);
+	
+	return calculations;
+}
+
+function formatArray(array){
+	var returnString = "";
+	for(var i = 0; i < array.length; i++){
+		returnString = returnString + array[i];
+		if(i != array.length-1){
+			returnString += "\t";
+		}
+	}
+	return returnString;
 }
 
 /**
