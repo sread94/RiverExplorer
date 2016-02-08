@@ -8,7 +8,11 @@ var betaFromParent = [];
 var gammaToParent = [];
 var gammaFromParent = [];
 
-var scaleFactor = 10;
+var parentId = [];
+
+var scaleFactor = 75;
+
+var riverNetwork;
 
 /**
 	This function reads in JSON data
@@ -16,7 +20,7 @@ var scaleFactor = 10;
 */
 function readTree(){
 
-	var data = the_tree;
+	var data = test_tree;
 
 	//assign node ids 0 through numNodes-1 for the dynamic
 	//calculation of the network values
@@ -50,15 +54,22 @@ function readTree(){
 	if(validTree === "true"){
 
 		//if the tree is valid draw it
-		//drawTree(theTree);
+		drawTree(theTree);
 		//addMouseEvents(theTree);
 		computeNetworkValueGeneral(theTree);
+		riverNetwork = theTree;
 	}
 	else{
 
 		//if the tree is not valid show an alert message
 		window.alert(validTree);
 	}
+}
+
+function clearCanvas(){
+	var c=document.getElementById("myCanvas");
+	var ctx=c.getContext("2d");
+	ctx.clearRect(0, 0, c.width, c.height);
 }
 
 /**
@@ -156,6 +167,7 @@ function checkTree(tree){
 	//make sure all probabilities are between 0 and 1
 	for(var m = 0; m<tree.edgeProbs.length; m++){
 		if(tree.edgeProbs[m][2]>1 || tree.edgeProbs[m][2]<0){
+				window.alert("m is: " + m + " and node id is: " + tree.edgeProbs[m][3]);
 				return "The edge probabilities must be between 0 and 1";
 		}
 	}
@@ -229,7 +241,7 @@ function drawTree(tree){
 	var ctx=c.getContext("2d");
 
 	//draw all the edges
-	/**for(var j = 0; j < tree.edgeProbs.length; j++){
+	for(var j = 0; j < tree.edgeProbs.length; j++){
 
 		//get the nodes that belong to the edge
 		var startNode = tree.getNodeByLabel(tree.edgeProbs[j][0]);
@@ -243,13 +255,13 @@ function drawTree(tree){
 
 		//draw a path from the starting node to the ending node
 		ctx.beginPath();
-		ctx.moveTo(startNode.coordinates[0]*scaleFactor + shift, startNode.coordinates[1]*scaleFactor);
-		ctx.lineTo(endNode.coordinates[0]*scaleFactor + shift, endNode.coordinates[1]*scaleFactor);
+		ctx.moveTo(startNode.coordinates[0]*75 + shift, startNode.coordinates[1]*75);
+		ctx.lineTo(endNode.coordinates[0]*75 + shift, endNode.coordinates[1]*75);
 		ctx.stroke();
 
 		//find the distance between the nodes in the x and y directions
-		var distX = startNode.coordinates[0]*scaleFactor - endNode.coordinates[0]*scaleFactor;
-		var distY = startNode.coordinates[1]*scaleFactor - endNode.coordinates[1]*scaleFactor;
+		var distX = startNode.coordinates[0]*75 - endNode.coordinates[0]*75;
+		var distY = startNode.coordinates[1]*75 - endNode.coordinates[1]*75;
 
 		var shift2 = startNode.coordinates[0] > endNode.coordinates[0] ? 12 : -12;
 
@@ -257,11 +269,9 @@ function drawTree(tree){
 		ctx.fillStyle = "#000000";
 		ctx.font = "20px Georgia";
 		ctx.fillText("" + tree.edgeProbs[j][2], 
-			startNode.coordinates[0]*scaleFactor - distX/2 + shift*2 + shift2, 
-			startNode.coordinates[1]*scaleFactor - distY/2 + shift*2);
-	}*/
-
-	window.alert("drawing nodes:");
+			startNode.coordinates[0]*75 - distX/2 + shift*2 + shift2, 
+			startNode.coordinates[1]*75 - distY/2 + shift*2);
+	}
 
 	//draw the nodes on the screen
 	for(var i = 0; i < tree.numNodes; i++){
@@ -270,19 +280,17 @@ function drawTree(tree){
 
 		//draw a circle for the node based on the coordinates given
 		ctx.beginPath();
-		ctx.arc(scaleFactor*tree.nodeList[i].coordinates[0],
-			scaleFactor*tree.nodeList[i].coordinates[1] + 75,10,0,2*Math.PI);
+		ctx.arc(75*tree.nodeList[i].coordinates[0],
+			75*tree.nodeList[i].coordinates[1],30,0,2*Math.PI);
 		ctx.fill();
 
 		//write the value of the node in the center
 		ctx.fillStyle = "#000000";
 		ctx.font = "20px Georgia";
 		ctx.fillText("" + tree.nodeList[i].val, 
-			scaleFactor*tree.nodeList[i].coordinates[0]-5, 
-			scaleFactor*tree.nodeList[i].coordinates[1]);
+			75*tree.nodeList[i].coordinates[0]-5, 
+			75*tree.nodeList[i].coordinates[1]);
 	}
-
-	window.alert("drawing nodes done");
 
 }
 
@@ -352,7 +360,8 @@ function computeNetworkValueGeneral(tree){
 
 	//window.alert("gamma done");
 
-	computeTotalNetworkValue(tree, 0, 1);
+	//computeTotalNetworkValue(tree, 0, 1);
+	computeTotalNetworkValue(tree, "b", "a");
 
 }
 
@@ -391,6 +400,7 @@ function computeNetworkValueGeneral_AlphaValues(tree){
 */
 function computeAlphaToParent(tree, node, parent){
 
+	parentId[node.nodeId] = parent.nodeId;
 	//if the node is a leaf node return the node val
 	if(node.neighbors.length === 1 && 
 		tree.getNodeIdByLabel(node.neighbors[0]) === parent.nodeId){
@@ -897,9 +907,11 @@ function computeTotalNetworkValue(tree, child, parent){
 	//in the parent's subtree
 	//plust the paths starting in the parent's subtree and ending
 	//in the child's subtree
-	var totalVal = gammaToParent[child] + gammaFromParent[child] +
-		alphaToParent[child]*childToParent*betaFromParent[child] +
-		alphaFromParent[child]*parentToChild* betaToParent[child];
+	var childID = tree.getNodeIdByLabel(child);
+
+	var totalVal = gammaToParent[childID] + gammaFromParent[childID] +
+		alphaToParent[childID]*childToParent*betaFromParent[childID] +
+		alphaFromParent[childID]*parentToChild* betaToParent[childID];
 
 
 	//get the canvas
@@ -909,7 +921,7 @@ function computeTotalNetworkValue(tree, child, parent){
 	//Display values on the screen
 	ctx.fillStyle = "#000000";
 	ctx.font = "20px Georgia";
-	ctx.fillText("Total Network Value: " + totalVal, 150, 680);
+	ctx.fillText("Total Network Value: " + totalVal, 150, 600);
 
 	return totalVal;
 }
@@ -1002,6 +1014,20 @@ function Tree(numNodes, nodeList, edgeProbs, root){
 			}
 		}
 	}
+
+	/**
+	* update the correct edges given the barrier id
+	* and values in each direction
+	*/
+	this.updateEdgeValues = function(id, upstream, downstream){
+		for(var i = 0; i < this.edgeProbs.length; i++){
+			if(edgeProbs[i][3] == id){
+				edgeProbs[i][2] = upstream;
+				edgeProbs[i+1][2] = downstream;
+				return;
+			}
+		}
+	}
 }
 
 /**
@@ -1028,4 +1054,154 @@ function Node(theId, theLabel, val, coords, neighbors){
 
 	//list of node ids that are the node's neighbors
 	this.neighbors = neighbors;
+
+}
+
+
+/********* UPDATE NETWORK **********/
+
+
+
+/**
+	newBarriers is an array of triples
+	Each index of the array contains three pieces of information
+	Barrier ID, upstream probability, downstream probability
+*/
+function updateBarriers(newBarriers){
+
+	//loop through barriers to update
+	for(var i = 0; i < newBarriers.length; i++){
+		riverNetwork.updateEdgeValues(newBarriers[i][0], newBarriers[i][1], newBarriers[i][2]);
+	}
+
+	clearCanvas();
+	drawTree(riverNetwork);
+	computeNetworkValueGeneral(riverNetwork);
+
+}
+
+/**
+	return the new network value, a list of flow into values for each barrier,
+	and a list of flow out value for each barrier
+*/
+function getUpdatedNetworkInformation(){
+	var JSON = "{ networkValue: " + computeTotalNetworkValue(riverNetwork, "b", "a")
+		+ ", flowInto: [";
+	for(var i = 0; i<riverNetwork.numNodes -1; i++){
+		var curAlphaVal = alphaToParent[i] + alphaFromParent[i]*
+			riverNetwork.getDirectedProbabilityByIds(parentId[i],i);
+		JSON+= "[" + i + ","+ curAlphaVal+"]";
+		if(i!=riverNetwork.numNodes -2){
+			JSON += ",";
+		}
+	}
+
+	JSON += "], flowOut: [";
+	for(var i = 0; i<riverNetwork.numNodes -1; i++){
+		var curBetaVal = betaToParent[i] + betaFromParent[i]*
+			riverNetwork.getDirectedProbabilityByIds(i,parentId[i]);
+		JSON+= "[" + i + ","+ curBetaVal+"]";
+		if(i!=riverNetwork.numNodes -2){
+			JSON += ",";
+		}
+	}
+
+	JSON += "]}";
+
+
+	window.alert(JSON);
+	return JSON;
+
+}
+
+
+/******** TEST CASES ********/
+
+/**
+* This function changes all edge probabilities
+* to 1 and then recalculates the network value
+*
+* The network value should be the square of the
+* sum of all the network values
+*/
+function sanityCheck_EdgesOne(theTree){
+	
+	window.alert("changing edge to 1");
+	
+	theTree.updateEdgeValues(0,1,1);
+	theTree.updateEdgeValues(1,1,1);
+	theTree.updateEdgeValues(2,1,1);
+	//theTree.updateEdgeValues(3,1,1);
+	//theTree.updateEdgeValues(4,1,1);
+
+	clearCanvas();
+	drawTree(theTree);
+	computeNetworkValueGeneral(theTree);
+}
+
+/**
+* This function changes all edge probabilities
+* to 0 and then recalculates the network value
+*
+* The network value should be the sum of all
+* of the network values squared
+*/
+function sanityCheck_EdgesZero(theTree){
+
+	window.alert("changing edge to 0");
+
+	theTree.updateEdgeValues(0,0,0);
+	theTree.updateEdgeValues(1,0,0);
+	theTree.updateEdgeValues(2,0,0);
+	//theTree.updateEdgeValues(3,0,0);
+	//theTree.updateEdgeValues(4,0,0);
+
+	clearCanvas();
+	drawTree(theTree);
+	computeNetworkValueGeneral(theTree);
+}
+
+/**
+* get the updated barrier passage values from the UI
+* parse the CSV to get the pairs of ids, upstream passage
+* values, and downstream passasge values.
+* Finally update the barriers.
+*/
+function readUserBarrierUpdates(){
+
+	var barrierInfo = [];
+
+	barrierInfo[0] = getArrayFromCSV(document.getElementById("barrier").value);
+	barrierInfo[1] = getArrayFromCSV(document.getElementById("upstream").value);
+	barrierInfo[2] = getArrayFromCSV(document.getElementById("downstream").value);
+
+	var barrierArray = [];
+
+	for(var i = 0; i < barrierInfo[0].length; i++){
+		var curRow = [];
+		curRow[0] = barrierInfo[0][i];
+		curRow[1] = barrierInfo[1][i];
+		curRow[2] = barrierInfo[2][i];
+		barrierArray[i] = curRow;
+	}
+
+	updateBarriers(barrierArray);
+	getUpdatedNetworkInformation();
+
+}
+
+/**
+* take a csv string and create an array
+*/
+function getArrayFromCSV(inputString){
+	var csvArr = [];
+	var csvLength = 0;
+	var nextIndex;
+	while((nextIndex = inputString.indexOf(",")) != -1){
+		csvArr[csvLength] = inputString.substring(0,nextIndex);
+		inputString = inputString.substring(nextIndex+1);
+		csvLength++;
+	}
+	csvArr[csvLength] = inputString;
+	return csvArr;
 }
