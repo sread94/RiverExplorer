@@ -1088,6 +1088,16 @@ function updateBarriers(newBarriers){
 function getUpdatedNetworkInformation(){
 	var JSON = "{networkValue: " + computeTotalNetworkValue(riverNetwork, "b", "a")
 		+ ",\nflowInto: [";
+
+	var rootFlowInto = riverNetwork.root.val;
+	for(var i = 0; i < riverNetwork.root.neighbors.length; i++){
+		var curNode = riverNetwork.getNodeIdByLabel(riverNetwork.root.neighbors[i]);
+		rootFlowInto += alphaToParent[curNode]
+			* riverNetwork.getDirectedProbabilityByIds(curNode,riverNetwork.root.nodeId);
+	}
+
+	JSON+="[" + riverNetwork.root.nodeLabel + "," + rootFlowInto + "],";
+
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
 		var curAlphaVal = alphaToParent[i] + alphaFromParent[i]*
 			riverNetwork.getDirectedProbabilityByIds(parentId[i],i);
@@ -1098,11 +1108,20 @@ function getUpdatedNetworkInformation(){
 		}
 	}
 
+	var rootFlowOut = riverNetwork.root.val;
+	for(var i = 0; i < riverNetwork.root.neighbors.length; i++){
+		var curNode = riverNetwork.getNodeIdByLabel(riverNetwork.root.neighbors[i]);
+		rootFlowOut += betaToParent[curNode]
+			* riverNetwork.getDirectedProbabilityByIds(riverNetwork.root.nodeId, curNode);
+	}
+
 	JSON += "],\nflowOut: [";
+
+	JSON +="[" + riverNetwork.root.nodeLabel + "," + rootFlowOut + "],";
+
 	for(var i = 0; i<riverNetwork.numNodes -1; i++){
-		var curBetaVal = betaToParent[i] + alphaToParent[i]*
-			riverNetwork.getDirectedProbabilityByIds(i, parentId[i]) - 
-			riverNetwork.getNodeById(i).val;
+		var curBetaVal = betaToParent[i] + betaFromParent[i]*
+			riverNetwork.getDirectedProbabilityByIds(i, parentId[i]);
 		var curLabel = riverNetwork.getNodeLabelById(i);
 		JSON+= "[" + curLabel + ","+ curBetaVal+"]";
 		if(i!=riverNetwork.numNodes -2){

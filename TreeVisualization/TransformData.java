@@ -519,6 +519,9 @@ public class TransformData {
 					//is 1
 					if(barId>=0){
 						newNeighbors[2] = barInfo[barId][1];
+						if(newNeighbors[2].equals("-1")){
+							newNeighbors[2] = "1";
+						}
 					}
 					else{
 						newNeighbors[2] = "1";
